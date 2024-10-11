@@ -1,0 +1,139 @@
+---
+title: "Homework assignment 1"
+author: "Daniel Soppitt"
+format: pdf
+---
+## 1. 
+```{r}
+#install.packages('babynames')
+library(babynames)
+library(dplyr)
+```
+
+## 2. This package contains 5 variables and 1924665 observations
+```{r}
+variables_observations <- babynames |> 
+  summarise(num_variables = ncol(babynames), num_observations = nrow(babynames))
+```
+
+## 3. 
+```{r}
+data_dictionary <- data.frame(
+  Variable_Name = c("year", "name", "sex", "n", "prop"),
+  Data_Type = c("integer", "character", "character", "integer", "numeric"),
+  Description = c(
+    "Year of birth",
+    "Name of the baby",
+    "Sex of the baby (female/male)",
+    "Number of occurrences of the name",
+    "Proportion of babies with the given name out of all births in that year"
+  ),
+  stringsAsFactors = FALSE
+)
+
+print(data_dictionary)
+```
+
+## 4. The range of years covered in babynames spans from 1880 to 2017
+```{r}
+year_range <- babynames |> 
+  summarise(min_year = min(year), max_year = max(year))
+```
+
+## 5. Object without the variable n
+```{r}
+babynames_n <- babynames |> select(-n)
+```
+
+## 6. One reason to keep the variable prop is to compare each name's popularity in a given year. The variable n is unnecessary unless comparing popularity of a given name between different years. 
+
+## 7. 
+```{r}
+secondMil <- filter(babynames_n, year < 2000)
+thirdMil <- filter(babynames_n, year >= 2000)
+
+popularByProp <- function(data) {
+  data |> 
+    group_by(year, sex, name) |> 
+    summarise(total_proportion = sum(prop, na.rm = TRUE)) |> 
+    ungroup() |> 
+    group_by(sex) |> 
+    slice_max(total_proportion) |> 
+    ungroup()
+}
+
+popularSecondMil <- popularByProp(secondMil)
+popularThirdMil <- popularByProp(thirdMil)
+```
+## a) The most popular names in the 2nd millennium were Mary and John
+## b) The most popular names in the 3rd millennium were Emily and Jacob
+
+## 8.
+```{r}
+babynames12 <- babynames |> 
+  filter(year <= 2012) |> 
+  filter(year >= 2000)
+
+popularQ <- babynames12 |> 
+  filter(grepl("^Q", name)) |> 
+  group_by(name) |> 
+  summarise(total_n = sum(n, na.rm = TRUE)) |> 
+  arrange(desc(total_n)) |> 
+  slice(1)
+popularV <- babynames12 |> 
+  filter(grepl("^V", name)) |> 
+  group_by(name) |> 
+  summarise(total_n = sum(n, na.rm = TRUE)) |> 
+  arrange(desc(total_n)) |> 
+  slice(1)
+popularX <- babynames12 |> 
+  filter(grepl("^X", name)) |> 
+  group_by(name) |> 
+  summarise(total_n = sum(n, na.rm = TRUE)) |> 
+  arrange(desc(total_n)) |> 
+  slice(1)
+```
+## The most popular baby names between the years 2000 and 2012 beginning with the letters Q, V, and X are Quinn, Victoria, and Xavier, respectively. 
+
+## 9.
+```{r}
+babynamesDecade <- babynames |> 
+  mutate(decade = floor(year / 10) * 10)
+
+print(babynamesDecade)
+```
+
+## 10.
+```{r}
+mean_median_decade <- babynamesDecade |> 
+  group_by(decade, sex) |> 
+  summarise(
+    mean_n = mean(n, na.rm = TRUE),
+    median_n = median(n, na.rm = TRUE)) |> 
+  ungroup()
+
+print(mean_median_decade)
+```
+
+## 11.
+```{r}
+popularDaniel <- babynamesDecade |> 
+  filter(name == "Daniel") |> 
+  arrange(desc(n)) |> 
+  slice(1)
+popularSupervisor <- babynamesDecade |> 
+  filter(name == "Aimee") |> 
+  arrange(desc(n)) |> 
+  slice(1)
+popularJack <- babynamesDecade |> 
+  filter(name == "Jack") |> 
+  arrange(desc(n)) |> 
+  slice(1)
+popularScott <- babynamesDecade |> 
+  filter(name == "Scott") |> 
+  arrange(desc(n)) |> 
+  slice(1)
+```
+## My name, Daniel, was most popular in the 80's, specifically 1985
+## My supervisor's name, Aimee, was most popular in the 70's, specifically 1977
+## Mike's kids' names, Jack and Scott, were most popular in the 1920's and the 70's, respectively. Specifically, the name Jack was most popular in 1927 and the name Scott was most popular in 1971

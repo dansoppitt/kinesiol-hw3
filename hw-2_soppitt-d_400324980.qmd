@@ -1,0 +1,87 @@
+---
+title: "Homework assignment 2"
+author: "Daniel Soppitt"
+format: pdf
+---
+
+```{r}
+library(tidyverse)
+```
+
+## A1. Read in .csv file
+
+```{r}
+data <- read.csv("./lord-of-the-rings-trilogy.csv")
+```
+
+## A2. This data set is not tidy because:
+
+-   There is inconsistent capitalization of column names (e.g. Hobbit_female vs. hobbit_Male)
+
+-   Column names include compound variables (e.g. elf_female indicates both the species and gender in one column)
+
+-   Not in long format (data set spreads the same variables across different columns)
+
+## A3. If the data set were tidy, there would be:
+
+-   4 columns
+
+-   18 rows
+
+## A4. In tidy format, column names would be:
+
+-   movie, species, gender, count
+
+## B1. Tidy the data set
+
+```{r}
+names(data) <- tolower(names(data))
+
+tidy_data <- data |> 
+  pivot_longer(
+    cols = -movie,
+    names_to = c("species", "gender"),
+    names_sep = "_",
+    values_to = "words_spoken"
+  )
+
+print(tidy_data)
+```
+
+## B2. Total number of words spoken:
+
+```{r}
+total_male_hobbit <- tidy_data |> 
+  filter(species == "hobbit", gender == "male") |> 
+  summarise(total_words = sum(words_spoken))
+
+total_female_elf <- tidy_data |> 
+  filter(species == "elf", gender == "female") |> 
+  summarise(total_words = sum(words_spoken))
+
+total_male_elf <- tidy_data |> 
+  filter(species == "elf", gender == "male") |> 
+  summarise(total_words = sum(words_spoken))
+
+print(total_male_hobbit)
+print(total_female_elf)
+print(total_male_elf)
+```
+
+## B3/4. Word dominance by species:
+
+```{r}
+words_by_species <- tidy_data |> 
+  group_by(movie, species) |> 
+  summarise(total_words = sum(words_spoken), .groups = 'drop')
+
+print(words_by_species)
+```
+
+The number of spoken words in a movie is dominated by a single race. This is dependent on the movie.
+
+-   The Fellowship of the Ring is dominated by hobbits
+
+-   The Return of the King is dominated by man
+
+-   The Two Towers is dominated by man
